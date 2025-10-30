@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Certificate Authenticator (Blockchain Concept)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#059669', // Emerald 600
+                        'secondary': '#10b981', // Emerald 500
+                        'accent': '#fcd34d', // Amber 300
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for better aesthetics */
+        body {
+            background-color: #f0fdf4; /* Pale green background */
+        }
+        .card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .btn-primary {
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #047857; /* Darker emerald */
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center py-6 bg-primary rounded-t-xl mb-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                Certificate Ledger System
+            </h1>
+            <p class="text-sm text-gray-200 mt-1">Simulating Immutable Record-Keeping via Hashing</p>
+        </header>
+
+        <div id="message-box" class="fixed top-4 right-4 z-50"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- --------------------------------- -->
+            <!-- SECTION 1: ISSUE CERTIFICATE FORM -->
+            <!-- --------------------------------- -->
+            <div class="card bg-white p-6 md:p-8 rounded-xl border-t-4 border-primary">
+                <h2 class="text-2xl font-bold mb-4 text-primary flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    1. Issue New Certificate
+                </h2>
+                <p class="text-sm text-gray-500 mb-6">
+                    Enter the certificate details. This data is hashed and the resulting unique hash is stored on our immutable ledger.
+                </p>
+
+                <form id="issueForm" class="space-y-4">
+                    <div>
+                        <label for="i-recipient" class="block text-sm font-medium text-gray-700">Recipient Name</label>
+                        <input type="text" id="i-recipient" name="recipient" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2 border">
+                    </div>
+                    <div>
+                        <label for="i-course" class="block text-sm font-medium text-gray-700">Course/Workshop Name</label>
+                        <input type="text" id="i-course" name="course" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2 border">
+                    </div>
+                    <div>
+                        <label for="i-date" class="block text-sm font-medium text-gray-700">Date Issued</label>
+                        <input type="date" id="i-date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2 border">
+                    </div>
+                    <div>
+                        <label for="i-issuer" class="block text-sm font-medium text-gray-700">Issuer Name</label>
+                        <input type="text" id="i-issuer" name="issuer" value="Gemini Academy" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2 border">
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full py-3 mt-4 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-secondary">
+                        <span id="issue-spinner" class="hidden h-5 w-5 border-4 border-white border-t-primary rounded-full animate-spin mr-2"></span>
+                        Issue & Record Hash
+                    </button>
+                </form>
+
+                <div id="issue-result" class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg hidden">
+                    <h3 class="text-lg font-semibold text-green-800">Issuance Successful</h3>
+                    <p class="text-sm text-gray-700 mt-2">
+                        **Certificate ID (Key):** <code id="issued-cert-id" class="block break-all bg-green-100 p-1 my-1 rounded"></code>
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        **Recorded Hash:** <code id="issued-hash" class="block break-all bg-green-100 p-1 my-1 rounded"></code>
+                    </p>
+                    <button onclick="copyToClipboard('issued-cert-id')" class="text-xs text-primary hover:underline mt-1">Copy ID</button>
+                </div>
+            </div>
+
+            <!-- --------------------------------- -->
+            <!-- SECTION 2: VERIFY CERTIFICATE FORM -->
+            <!-- --------------------------------- -->
+            <div class="card bg-white p-6 md:p-8 rounded-xl border-t-4 border-secondary">
+                <h2 class="text-2xl font-bold mb-4 text-secondary flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.382a12.001 12.001 0 00-17.228 0A12.001 12.001 0 00.182 12a12.001 12.001 0 0023.636 0 12.001 12.001 0 00-5.618-4.382z" />
+                    </svg>
+                    2. Verify Certificate Authenticity
+                </h2>
+                <p class="text-sm text-gray-500 mb-6">
+                    The verifier provides the certificate ID and the current data. The system re-hashes the data and compares it to the hash on the ledger.
+                </p>
+
+                <form id="verifyForm" class="space-y-4">
+                    <div>
+                        <label for="v-cert-id" class="block text-sm font-medium text-gray-700">Certificate ID</label>
+                        <input type="text" id="v-cert-id" name="certificate_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary p-2 border" placeholder="Paste the issued ID here">
+                    </div>
+                    <div class="space-y-2 pt-2 border-t mt-4 border-gray-200">
+                        <p class="text-sm font-semibold text-gray-700">Certificate Data to Verify:</p>
+                        <div>
+                            <label for="v-recipient" class="block text-sm font-medium text-gray-600">Recipient Name</label>
+                            <input type="text" id="v-recipient" name="recipient" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary p-2 border">
+                        </div>
+                        <div>
+                            <label for="v-course" class="block text-sm font-medium text-gray-600">Course Name</label>
+                            <input type="text" id="v-course" name="course" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary p-2 border">
+                        </div>
+                        <div>
+                            <label for="v-date" class="block text-sm font-medium text-gray-600">Date Issued</label>
+                            <input type="date" id="v-date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary p-2 border">
+                        </div>
+                        <div>
+                            <label for="v-issuer" class="block text-sm font-medium text-gray-600">Issuer Name</label>
+                            <input type="text" id="v-issuer" name="issuer" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary p-2 border">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-3 mt-4 bg-secondary text-white font-semibold rounded-lg shadow-md hover:bg-primary">
+                        <span id="verify-spinner" class="hidden h-5 w-5 border-4 border-white border-t-secondary rounded-full animate-spin mr-2"></span>
+                        Verify Authenticity
+                    </button>
+                    
+                    <button type="button" onclick="tamperData()" class="w-full py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors">
+                        Simulate Tampering (Change Recipient)
+                    </button>
+                </form>
+
+                <div id="verify-result" class="mt-6 p-4 rounded-lg hidden">
+                    <h3 id="verify-title" class="text-lg font-semibold"></h3>
+                    <p class="text-sm text-gray-700 mt-2">
+                        **Ledger Hash (Original):** <code id="recorded-v-hash" class="block break-all bg-gray-100 p-1 my-1 rounded"></code>
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        **Verifier Hash (Calculated):** <code id="verified-v-hash" class="block break-all bg-gray-100 p-1 my-1 rounded"></code>
+                    </p>
+                    <p id="issued-info" class="text-xs text-gray-500 mt-2"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-12 text-center text-sm text-gray-500 pb-4">
+        <p>Concept: Using Hashing and an Immutable Ledger (Simulated Blockchain) for Authentication.</p>
+    </footer>
+
+    <script>
+        const issueForm = document.getElementById('issueForm');
+        const verifyForm = document.getElementById('verifyForm');
+        const issueResultDiv = document.getElementById('issue-result');
+        const verifyResultDiv = document.getElementById('verify-result');
+
+        // --- Utility Functions ---
+
+        /** Shows a temporary toast message */
+        function showToast(message, type = 'success') {
+            const box = document.getElementById('message-box');
+            let bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            let icon = type === 'success' ? '✅' : '❌';
+            
+            const toast = document.createElement('div');
+            toast.className = `${bgColor} text-white px-4 py-2 rounded-lg shadow-xl mb-3 text-sm flex items-center`;
+            toast.innerHTML = `${icon} <span class="ml-2">${message}</span>`;
+            
+            box.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        /** Simple function to copy text to clipboard */
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            try {
+                // Use execCommand for broader compatibility in sandboxed environments
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast("Certificate ID copied to clipboard!");
+            } catch (err) {
+                console.error('Could not copy text: ', err);
+                showToast("Failed to copy text.", 'error');
+            }
+        }
+        
+        /** Shows/hides a spinner and disables/enables the button */
+        function toggleLoading(buttonId, isLoading, spinnerId = null) {
+            const button = document.querySelector(`#${buttonId}`);
+            const spinner = spinnerId ? document.getElementById(spinnerId) : null;
+            if (isLoading) {
+                button.disabled = true;
+                button.classList.add('opacity-50', 'cursor-not-allowed');
+                if (spinner) spinner.classList.remove('hidden');
+            } else {
+                button.disabled = false;
+                button.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (spinner) spinner.classList.add('hidden');
+            }
+        }
+
+        // --- Issue Logic ---
+
+        issueForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            toggleLoading('issueForm button[type="submit"]', true, 'issue-spinner');
+
+            const data = {
+                recipient: document.getElementById('i-recipient').value,
+                course: document.getElementById('i-course').value,
+                date: document.getElementById('i-date').value,
+                issuer: document.getElementById('i-issuer').value,
+            };
+
+            try {
+                const response = await fetch('/api/issue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.authentic !== false) {
+                    // Update display elements
+                    document.getElementById('issued-cert-id').textContent = result.certificate_id;
+                    document.getElementById('issued-hash').textContent = result.recorded_hash;
+                    issueResultDiv.classList.remove('hidden');
+                    
+                    // Pre-fill verification form for easy testing
+                    document.getElementById('v-cert-id').value = result.certificate_id;
+                    document.getElementById('v-recipient').value = data.recipient;
+                    document.getElementById('v-course').value = data.course;
+                    document.getElementById('v-date').value = data.date;
+                    document.getElementById('v-issuer').value = data.issuer;
+                    
+                    showToast(result.message);
+                } else {
+                    showToast(result.message || "Issuance failed.", 'error');
+                }
+
+            } catch (error) {
+                console.error('Issue Error:', error);
+                showToast('Network error during issuance.', 'error');
+            } finally {
+                toggleLoading('issueForm button[type="submit"]', false, 'issue-spinner');
+            }
+        });
+
+        // --- Verification Logic ---
+
+        verifyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            toggleLoading('verifyForm button[type="submit"]', true, 'verify-spinner');
+
+            const certData = {
+                recipient: document.getElementById('v-recipient').value,
+                course: document.getElementById('v-course').value,
+                date: document.getElementById('v-date').value,
+                issuer: document.getElementById('v-issuer').value,
+            };
+            
+            const payload = {
+                certificate_id: document.getElementById('v-cert-id').value,
+                certificate_data: certData
+            };
+
+            try {
+                const response = await fetch('/api/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                // Update result container
+                const title = document.getElementById('verify-title');
+                const resultDiv = document.getElementById('verify-result');
+                const recordedHashCode = document.getElementById('recorded-v-hash');
+                const verifiedHashCode = document.getElementById('verified-v-hash');
+                const issuedInfo = document.getElementById('issued-info');
+
+                recordedHashCode.textContent = result.recorded_hash || 'N/A';
+                verifiedHashCode.textContent = result.verified_hash || 'N/A';
+                issuedInfo.textContent = result.issued_at ? `Issued on: ${result.issued_at}` : '';
+
+                if (result.authentic === true) {
+                    title.textContent = '✅ Authentic Certificate';
+                    resultDiv.className = 'mt-6 p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg';
+                    showToast(result.message);
+                } else {
+                    title.textContent = result.authentic === false ? '❌ Verification Failed (Tampered)' : '⚠️ Certificate Not Found';
+                    resultDiv.className = 'mt-6 p-4 bg-red-100 border border-red-400 text-red-800 rounded-lg';
+                    
+                    if (result.authentic === false) {
+                         showToast("Verification Failed: Data has been tampered!", 'error');
+                    } else {
+                         showToast(result.message, 'error');
+                    }
+                }
+                resultDiv.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Verify Error:', error);
+                showToast('Network error during verification.', 'error');
+            } finally {
+                toggleLoading('verifyForm button[type="submit"]', false, 'verify-spinner');
+            }
+        });
+
+        // --- Tampering Simulation ---
+        function tamperData() {
+            const recipientInput = document.getElementById('v-recipient');
+            const originalRecipient = recipientInput.value;
+            recipientInput.value = originalRecipient + " (Tampered)";
+            showToast("Recipient Name tampered! Try verification now.", 'error');
+        }
+
+    </script>
+</body>
+</html>
